@@ -58,29 +58,6 @@ def perform_eda(df):
     sns.histplot(df['Total_Trans_Ct'], stat='density', kde=True).savefig("./image/eda/total_trans_density.png")
     sns.heatmap(df.corr(), annot=False, cmap='Dark2_r', linewidths=2).savefig("./image/eda/feature_importance.png")
 
-cat_columns = [
-    'Gender',
-    'Education_Level',
-    'Marital_Status',
-    'Income_Category',
-    'Card_Category'
-]
-quant_columns = [
-    'Customer_Age',
-    'Dependent_count',
-    'Months_on_book',
-    'Total_Relationship_Count',
-    'Months_Inactive_12_mon',
-    'Contacts_Count_12_mon',
-    'Credit_Limit',
-    'Total_Revolving_Bal',
-    'Avg_Open_To_Buy',
-    'Total_Amt_Chng_Q4_Q1',
-    'Total_Trans_Amt',
-    'Total_Trans_Ct',
-    'Total_Ct_Chng_Q4_Q1',
-    'Avg_Utilization_Ratio'
-]
 def encoder_helper(df, category_lst, response):
     '''
     helper function to turn each categorical column into a new column with
@@ -94,8 +71,6 @@ def encoder_helper(df, category_lst, response):
     output:
             df: pandas dataframe with new columns for
     '''
-    y = df['Churn']
-    X = pd.DataFrame()
     for index in range(len(category_lst)) :
         df[response[index]]=  df.groupby(category_lst[index]).mean()['Churn']
     return df
@@ -251,3 +226,32 @@ def train_models(X_train, X_test, y_train, y_test):
     shap_values = explainer.shap_values(X_test)
     shap.summary_plot(shap_values, X_test, plot_type="bar").savefig("images/result/shap.png")
     feature_importance_plot(cv_rfc,X_train,"images/result/feature_importance.png")
+if __name__ == "__main__":
+    cat_columns = [
+        'Gender',
+        'Education_Level',
+        'Marital_Status',
+        'Income_Category',
+        'Card_Category'
+    ]
+    keep_cols = ['Customer_Age', 'Dependent_count', 'Months_on_book',
+                 'Total_Relationship_Count', 'Months_Inactive_12_mon',
+                 'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
+                 'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
+                 'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
+                 'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn',
+                 'Income_Category_Churn', 'Card_Category_Churn']
+
+    df = import_data("./data/bank_data.csv")
+    perform_eda(df)
+    df=encoder_helper(df,cat_columns,[
+        'Gender_Churn',
+        'Education_Level_Churn',
+        'Marital_Status_Churn',
+        'Income_Category_Churn',
+        'Card_Category_Churn'
+    ])
+    X_train, X_test, y_train, y_test = perform_feature_engineering(df,keep_cols)
+    train_models(X_train, X_test, y_train, y_test)
+
+
