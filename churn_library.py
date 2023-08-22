@@ -1,5 +1,7 @@
 '''
 libraries for perform churn prediction jobs
+Author: Tao Liu
+Creation Date: 08/21/2023
 '''
 import os
 import shap
@@ -17,7 +19,9 @@ from sklearn.metrics import plot_roc_curve, classification_report
 # library doc string
 # import libraries
 sns.set()
-os.environ['QT_QPA_PLATFORM']='offscreen'
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+
+
 def import_data(pth):
     '''
     returns dataframe for the csv found at pth
@@ -27,9 +31,11 @@ def import_data(pth):
     output:
             df: pandas dataframe
     '''
-    original_df =pd.read_csv(pth)
-    original_df['Churn'] = original_df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
+    original_df = pd.read_csv(pth)
+    original_df['Churn'] = original_df['Attrition_Flag'].apply(
+        lambda val: 0 if val == "Existing Customer" else 1)
     return original_df
+
 
 def perform_eda(eda_df):
     '''
@@ -43,25 +49,34 @@ def perform_eda(eda_df):
     plt.figure(figsize=(20, 10))
     eda_df['Churn'].hist()
     plt.savefig("./images/eda/churn_hist.png")
+    plt.close()
+    plt.figure(figsize=(20,10))
     eda_df['Customer_Age'].hist()
     plt.savefig("./images/eda/customer_age.png")
+    plt.close()
+    plt.figure(figsize=(20,10))
     eda_df.Marital_Status.value_counts(
         'normalize').plot(kind='bar')
     plt.savefig("./images/eda/marital_status.png")
+    plt.close()
     # distplot is deprecated. Use histplot instead
     # sns.distplot(df['Total_Trans_Ct']);
     # Show distributions of 'Total_Trans_Ct'
     # add a smooth curve obtained using a kernel density estimate
+    plt.figure(figsize=(20,10))
     sns.histplot(eda_df['Total_Trans_Ct'],
                  stat='density',
                  kde=True)
     plt.savefig("./images/eda/total_trans_density.png")
+    plt.close()
+    plt.figure(figsize=(20,10))
     sns.heatmap(eda_df.corr(),
                 annot=False,
                 cmap='Dark2_r',
                 linewidths=2
                 )
     plt.savefig("./images/eda/feature_importance.png")
+
 
 def encoder_helper(encoder_df, category_lst, response):
     '''
@@ -143,12 +158,11 @@ def classification_report_image(y_train,
                  fontproperties='monospace')  # Adjust fontsize if needed
         plt.axis('off')
         plt.tight_layout()
-        plt.subplots_adjust(left=0.2, right=0.8, top=0.8,
-                            bottom=0.1)  # Adjust these parameters to fit the text perfectly
+        # Adjust these parameters to fit the text perfectly
+        plt.subplots_adjust(left=0.2, right=0.8, top=0.8, bottom=0.1)
         plt.title(title)
         plt.savefig(f'images/results/{title}.png', dpi=300)
         plt.close()
-
 
 def feature_importance_plot(model, x_data, output_pth):
     '''
@@ -199,7 +213,8 @@ def train_models(x_train, x_test, y_train, y_test):
     # grid search
     rfc = RandomForestClassifier(random_state=42)
     # Use a different solver if the default 'lbfgs' fails to converge
-    # Reference: https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+    # Reference:
+    # https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
     lrc = LogisticRegression(solver='lbfgs', max_iter=3000)
 
     param_grid = {
@@ -227,16 +242,25 @@ def train_models(x_train, x_test, y_train, y_test):
                                 y_test_preds_lr,
                                 y_test_preds_rf)
     # plots
-    plt.close()
     plt.figure(figsize=(15, 8))
     _ax = plt.gca()
-    rfc_disp = plot_roc_curve(cv_rfc.best_estimator_, x_test, y_test, ax=_ax, alpha=0.8)
+    rfc_disp = plot_roc_curve(
+        cv_rfc.best_estimator_,
+        x_test,
+        y_test,
+        ax=_ax,
+        alpha=0.8)
     rfc_disp.plot(ax=_ax, alpha=0.8)
     plt.savefig("./images/results/roc.png")
     # save best model
     joblib.dump(cv_rfc.best_estimator_, './models/rfc_model.pkl')
     joblib.dump(lrc, './models/logistic_model.pkl')
-    feature_importance_plot(cv_rfc,x_train,"images/results/feature_importance.png")
+    feature_importance_plot(
+        cv_rfc,
+        x_train,
+        "images/results/feature_importance.png")
+
+
 #     print('now start shap plot')
 #     explainer = shap.TreeExplainer(cv_rfc.best_estimator_)
 #     shap_values = explainer.shap_values(x_test)
@@ -250,17 +274,30 @@ if __name__ == "__main__":
         'Income_Category',
         'Card_Category'
     ]
-    keep_cols = ['Customer_Age', 'Dependent_count', 'Months_on_book',
-                 'Total_Relationship_Count', 'Months_Inactive_12_mon',
-                 'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
-                 'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
-                 'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
-                 'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn',
-                 'Income_Category_Churn', 'Card_Category_Churn']
+    keep_cols = [
+        'Customer_Age',
+        'Dependent_count',
+        'Months_on_book',
+        'Total_Relationship_Count',
+        'Months_Inactive_12_mon',
+        'Contacts_Count_12_mon',
+        'Credit_Limit',
+        'Total_Revolving_Bal',
+        'Avg_Open_To_Buy',
+        'Total_Amt_Chng_Q4_Q1',
+        'Total_Trans_Amt',
+        'Total_Trans_Ct',
+        'Total_Ct_Chng_Q4_Q1',
+        'Avg_Utilization_Ratio',
+        'Gender_Churn',
+        'Education_Level_Churn',
+        'Marital_Status_Churn',
+        'Income_Category_Churn',
+        'Card_Category_Churn']
 
     bank_df = import_data("./data/bank_data.csv")
     perform_eda(bank_df)
-    encoder_churn_df=encoder_helper(bank_df,cat_columns,[
+    encoder_churn_df = encoder_helper(bank_df, cat_columns, [
         'Gender_Churn',
         'Education_Level_Churn',
         'Marital_Status_Churn',
@@ -268,6 +305,6 @@ if __name__ == "__main__":
         'Card_Category_Churn'
     ])
     churn_x_train, churn_x_test, churn_y_train, churn_y_test = perform_feature_engineering(
-        encoder_churn_df,keep_cols)
+        encoder_churn_df, keep_cols)
     print("now start training models")
     train_models(churn_x_train, churn_x_test, churn_y_train, churn_y_test)

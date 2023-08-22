@@ -1,38 +1,45 @@
+'''
+unit test section for churn_library
+'''
 import os
 import logging
-import churn_library as cls
-import pandas as pd
 import pytest
+import churn_library as cls
 logging.basicConfig(
     filename='./logs/churn_library.log',
     level = logging.INFO,
     filemode='w',
     format='%(name)s - %(levelname)s - %(message)s')
 
-def df_plugin():
-    return None
-def sample_data():
-    return None
 def pytest_configure():
-    pytest.df = df_plugin()
-    pytest.encoder_df = df_plugin()
-    pytest.X_train = sample_data()
-    pytest.X_test = sample_data()
-    pytest.y_train = sample_data()
-    pytest.y_test = sample_data()
+    '''
+    define pytest configure
+    :return: None
+    '''
+    pytest.df = None
+    pytest.encoder_df = None
+    pytest.x_train = None
+    pytest.x_test = None
+    pytest.y_train = None
+    pytest.y_test = None
 
 def test_import(import_data):
+    '''
+
+    :param import_data: function of import_data
+    :return: None
+    '''
     try:
-        df = import_data("./data/bank_data.csv")
+        import_df = import_data("./data/bank_data.csv")
         logging.info("Testing import_data: SUCCESS")
-        pytest.df = df
+        pytest.df = import_df
     except FileNotFoundError as err:
         logging.error("Testing import_eda: The file wasn't found")
         raise err
 
     try:
-        assert df.shape[0] > 0
-        assert df.shape[1] > 0
+        assert import_df.shape[0] > 0
+        assert import_df.shape[1] > 0
     except AssertionError as err:
         logging.error("Testing import_data: The file doesn't appear to have rows and columns")
         raise err
@@ -43,27 +50,21 @@ def test_eda(perform_eda):
     test perform eda function
     '''
     # isolation test dataset
-    df = pytest.df
+    eda_df = pytest.df
     try:
-        perform_eda(df)
+        perform_eda(eda_df)
         logging.info("Testing eda: SUCCESS")
     except RuntimeError as err:
         logging.error("Testing eda: The function doesn't run successful")
         raise err
 
     try:
-        assert list(df['Churn']) == [0, 0], "Churn transformation failed"
-    except AssertionError as err:
-        logging.error(f"Testing eda: Churn transformation failed")
-        raise err
-
-    try:
         paths = [
-            "./image/eda/churn_hist.png",
-            "./image/eda/customer_age.png",
-            "./image/eda/marital_status.png",
-            "./image/eda/total_trans_density.png",
-            "./image/eda/feature_importance.png"
+            "./images/eda/churn_hist.png",
+            "./images/eda/customer_age.png",
+            "./images/eda/marital_status.png",
+            "./images/eda/total_trans_density.png",
+            "./images/eda/feature_importance.png"
         ]
         for path in paths:
             assert os.path.exists(path)
@@ -86,15 +87,15 @@ def test_encoder_helper(encoder_helper):
             'Marital_Status',
             'Income_Category',
             'Card_Category']
-        df = pytest.df
-        df = encoder_helper(df,cat_columns,['Gender_Churn',
+        encoder_df = pytest.df
+        encoder_df = encoder_helper(encoder_df,cat_columns,['Gender_Churn',
         'Education_Level_Churn',
         'Marital_Status_Churn',
         'Income_Category_Churn',
         'Card_Category_Churn'])
-        pytest.encoder_df= df
+        pytest.encoder_df= encoder_df
     except RuntimeError as err:
-        logging.error(f"Testing Encoder Helper: Encoder Failed")
+        logging.error("Testing Encoder Helper: Encoder Failed")
         raise err
 
 
@@ -112,14 +113,14 @@ def test_perform_feature_engineering(perform_feature_engineering):
                      'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn',
                      'Income_Category_Churn', 'Card_Category_Churn']
         # use only gender as an example to test encoder
-        df = pytest.encoder_df
-        X_train, X_test, y_train, y_test = perform_feature_engineering(df,keep_cols)
-        pytest.X_train = X_train
-        pytest.X_test = X_test
+        encoder_df = pytest.encoder_df
+        x_train, x_test, y_train, y_test = perform_feature_engineering(encoder_df,keep_cols)
+        pytest.x_train = x_train
+        pytest.x_test = x_test
         pytest.y_train = y_train
         pytest.y_test = y_test
     except RuntimeError as err:
-        logging.error(f"Testing Feature Engineering : Function Failed")
+        logging.error("Testing Feature Engineering : Function Failed")
         raise err
 
 
@@ -128,7 +129,7 @@ def test_train_models(train_models):
     test train_models
     '''
     try:
-        train_models(pytest.X_train,pytest.X_test,pytest.y_train,pytest.y_test)
+        train_models(pytest.x_train,pytest.x_test,pytest.y_train,pytest.y_test)
     except RuntimeError as err:
         logging.error(f"Testing Train Models : Function Failed")
         raise err
@@ -143,12 +144,3 @@ if __name__ == "__main__":
     test_encoder_helper(cls.encoder_helper)
     test_perform_feature_engineering(cls.perform_feature_engineering)
     test_train_models(cls.train_models)
-
-
-
-
-
-
-
-
-
